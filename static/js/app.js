@@ -49,9 +49,6 @@ async function api(url, options = {}) {
   const opts = Object.assign({}, options, { headers: headers });
   const res = await fetch(url, opts);
   const data = await res.json().catch(() => ({ ok: false, error: "پاسخ نامعتبر از سرور" }));
-  if (!res.ok || data.ok === false) {
-    alert(data.error || "خطا در انجام عملیات");
-  }
   return data;
 }
 

@@ -29,6 +29,7 @@
 async function loadLookups() {
   const companyId = document.getElementById('company_id').value;
   const data = await api('/api/lookups' + (companyId ? ('?company_id=' + companyId) : ''));
+  if (!data.ok) return;
   fillSelect(document.getElementById('customer'), data.customers);
   fillSelect(document.getElementById('product'), data.products);
   fillSelect(document.getElementById('location'), data.locations);
@@ -39,6 +40,7 @@ async function loadDashboard() {
     const v = document.getElementById(id).value; if (v) params.set(id, v);
   });
   const data = await api('/api/dashboard?' + params.toString());
+  if (!data.ok) { alert(data.error || 'خطا در بارگذاری داشبورد'); return; }
   const s = data.stats;
   document.getElementById('stats').innerHTML = [
     ['تعداد قراردادها', s.contracts],

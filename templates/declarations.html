@@ -29,6 +29,7 @@ async function loadDecls() {
   const params = new URLSearchParams();
   ['company_id','q','status'].forEach(id => { const v = document.getElementById(id).value; if (v) params.set(id, v); });
   const data = await api('/api/declarations?' + params.toString());
+  if (!data.ok) { alert(data.error || 'خطا در بارگذاری کوتاژها'); return; }
   document.getElementById('rows').innerHTML = data.items.map(d => `
     <tr>
       <td>${escapeHtml(d.company_name)}</td>

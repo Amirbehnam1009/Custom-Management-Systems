@@ -52,11 +52,13 @@ function render(item) {
 }
 async function load() {
   const data = await api('/api/contracts/' + contractId);
+  if (!data.ok) { alert(data.error || 'خطا در بارگذاری قرارداد'); return; }
   render(data.item);
 }
 async function cancelDecl(id) {
   if (!confirm('کوتاژ ابطال شود؟ تناژ آن از مانده قرارداد کسر نخواهد شد.')) return;
-  await api('/api/declarations/' + id + '/cancel', {method:'POST'});
+  const data = await api('/api/declarations/' + id + '/cancel', {method:'POST'});
+  if (!data.ok) { alert(data.error || 'خطا در ابطال کوتاژ'); return; }
   load();
 }
 load();

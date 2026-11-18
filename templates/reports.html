@@ -43,6 +43,7 @@ function params() {
 }
 async function load() {
   const data = await api('/api/contracts?' + params().toString());
+  if (!data.ok) { alert(data.error || 'خطا در بارگذاری گزارش'); return; }
   document.getElementById('rows').innerHTML = data.items.map((c,i) => `
     <tr>
       <td>${i+1}</td><td>${escapeHtml(c.company_name)}</td><td><a href="/contracts/${c.id}">${escapeHtml(c.contract_number)}</a></td>

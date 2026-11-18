@@ -51,6 +51,7 @@
 const preselected = {{ preselected_contract.id if preselected_contract else 'null' }};
 async function loadContracts() {
   const data = await api('/api/contracts');
+  if (!data.ok) { alert(data.error || 'خطا در بارگذاری قراردادها'); return; }
   const sel = document.getElementById('contract_id');
   sel.innerHTML = (data.items || []).map(c => `<option value="${c.id}" ${preselected === c.id ? 'selected' : ''}>${escapeHtml(c.company_name)} | ${escapeHtml(c.contract_number)} | مانده ${formatNumber(c.remaining_tonnage)}</option>`).join('');
 }
@@ -60,7 +61,7 @@ document.getElementById('form').addEventListener('submit', async (e) => {
   const isEdit = {{ 'true' if declaration else 'false' }};
   const url = isEdit ? '/api/declarations/{{ declaration.id if declaration else 0 }}' : '/api/declarations';
   const data = await api(url, {method: isEdit ? 'PUT' : 'POST', body: JSON.stringify(payload)});
-  if (!data.ok) return;
+  if (!data.ok) { alert(data.error || 'خطا در ذخیره کوتاژ'); return; }
   alert('کوتاژ ذخیره شد. مانده تناژ به‌روز شد.');
   location.href = '/contracts/' + data.item.contract_id;
 });
