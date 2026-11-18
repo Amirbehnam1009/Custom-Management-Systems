@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}مدیریت قراردادها{% endblock %}
+{% block heading %}مدیریت قراردادها{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>قراردادها</h2>
+  <a class="btn btn-gold" href="{{ url_for('contract_new_page') }}">ثبت قرارداد جدید</a>
+</div>
+<div class="card">
+  <div class="filters">
+    <div><label>شرکت</label><select id="company_id"><option value="">همه</option>{% for c in all_companies %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+    <div><label>جستجو (شماره / مشتری)</label><input id="q"></div>
+    <div><label>محصول</label><input id="product"></div>
+    <div><label>محل تحویل</label><input id="location"></div>
+    <div><label>وضعیت</label><select id="status"><option value="">همه</option><option value="active">فعال</option><option value="completed">تکمیل‌شده</option><option value="pending">دارای کوتاژ در انتظار</option><option value="review">نیاز به بررسی</option></select></div>
+    <div><label>مانده تناژ</label><select id="remaining"><option value="">همه</option><option value="has">دارای مانده</option><option value="zero">بدون مانده</option></select></div>
+  </div>
+  <button class="btn btn-primary" id="apply">جستجو</button>
+  <div class="table-wrap" style="margin-top:14px">
+    <table>
+      <thead>
+        <tr>
+          <th>ردیف</th><th>شرکت</th><th>شماره قرارداد</th><th>تاریخ</th><th>مشتری</th>
+          <th>مقدار</th><th>محصول</th><th>محل تحویل</th><th>شماره کوتاژها</th><th>مانده تناژ</th><th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadContracts() {
+  const params = new URLSearchParams();
+  ['company_id','q','product','location','status','remaining'].forEach(id => {
+    const v = document.getElementById(id).value; if (v) params.set(id, v);
+  });
+  const data = await api('/api/contracts?' + params.toString());
+  document.getElementById('rows').innerHTML = data.items.map((c, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${escapeHtml(c.company_name)}</td>
+      <td>${escapeHtml(c.contract_number)}${c.needs_review ? ' <span class="badge badge-warn">بررسی</span>' : ''}</td>
+      <td>${escapeHtml(c.contract_date)}</td>
+      <td>${escapeHtml(c.customer_name)}</td>
+      <td>${formatNumber(c.contract_quantity)}</td>
+      <td>${escapeHtml(c.product_type)}</td>
+      <td>${escapeHtml(c.delivery_location)}</td>
+      <td>${escapeHtml(c.declaration_numbers || '-')}</td>
+      <td><b>${formatNumber(c.remaining_tonnage)}</b></td>
+      <td class="actions">
+        <a class="btn btn-sm btn-primary" href="/contracts/${c.id}">مشاهده</a>
+        <a class="btn btn-sm btn-ghost" href="/contracts/${c.id}/edit">ویرایش</a>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="11">قراردادی یافت نشد</td></tr>';
+}
+document.getElementById('apply').onclick = loadContracts;
+loadContracts();
+</script>
+{% endblock %}

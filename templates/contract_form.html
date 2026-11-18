@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ 'ویرایش قرارداد' if contract else 'ثبت قرارداد جدید' }}{% endblock %}
+{% block heading %}{{ 'ویرایش قرارداد' if contract else 'ثبت قرارداد جدید' }}{% endblock %}
+{% block content %}
+<div class="card">
+  <form id="form" class="form-grid">
+    <div>
+      <label>شرکت</label>
+      <select name="company_id" required>
+        {% for c in all_companies %}
+        <option value="{{ c.id }}" {% if contract and contract.company_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>شماره قرارداد</label>
+      <input name="contract_number" required value="{{ contract.contract_number if contract else '' }}">
+    </div>
+    <div>
+      <label>تاریخ قرارداد (شمسی)</label>
+      <input name="contract_date" placeholder="1405/01/15" value="{{ contract.contract_date if contract else '' }}">
+    </div>
+    <div>
+      <label>نام کامل مشتری</label>
+      <input name="customer_name" required value="{{ contract.customer_name if contract else '' }}">
+    </div>
+    <div>
+      <label>مقدار / تناژ قرارداد</label>
+      <input name="contract_quantity" required value="{{ contract.contract_quantity if contract else '' }}">
+    </div>
+    <div>
+      <label>نوع محصول</label>
+      <input name="product_type" value="{{ contract.product_type if contract else '' }}">
+    </div>
+    <div>
+      <label>محل تحویل</label>
+      <input name="delivery_location" value="{{ contract.delivery_location if contract else '' }}">
+    </div>
+    <div class="full">
+      <label>توضیحات</label>
+      <textarea name="notes">{{ contract.notes if contract else '' }}</textarea>
+    </div>
+    {% if contract %}
+    <div class="full">
+      <label><input type="checkbox" name="allow_over_declaration" value="1" {% if contract.allow_over_declaration %}checked{% endif %}> مجوز تنظیم تناژ بیش از مقدار قرارداد</label>
+    </div>
+    {% endif %}
+    <div class="full actions">
+      <button class="btn btn-primary" type="submit">ذخیره قرارداد</button>
+      <a class="btn btn-ghost" href="{{ url_for('contracts_page') }}">بازگشت</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = formToPayload(e.target);
+  const isEdit = {{ 'true' if contract else 'false' }};
+  const url = isEdit ? '/api/contracts/{{ contract.id if contract else 0 }}' : '/api/contracts';
+  const method = isEdit ? 'PUT' : 'POST';
+  const headers = {'Content-Type':'application/json', 'X-CSRF-Token': csrfToken()};
+  let res = await fetch(url, {method, headers, body: JSON.stringify(payload)});
+  let data = await res.json();
+  if (res.status === 409 && data.duplicate) {
+    if (confirm(data.error + '\nآیا ادامه می‌دهید؟')) {
+      payload.confirm_duplicate = true;
+      res = await fetch(url, {method, headers, body: JSON.stringify(payload)});
+      data = await res.json();
+    } else { return; }
+  }
+  if (!data.ok) { alert(data.error || 'خطا در ذخیره'); return; }
+  alert('قرارداد با موفقیت ذخیره شد.');
+  location.href = '/contracts/' + data.item.id;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ورود به سامانه کوتاژ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="card login-card">
+      <h2>سامانه کوتاژ و اظهار</h2>
+      <p class="muted">شرکت تولیدی معدنی آتشکده خراسان و شرکت گچ خراسان</p>
+      {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label>نام کاربری</label>
+        <input name="username" required autocomplete="username">
+        <label style="margin-top:10px">رمز عبور</label>
+        <input name="password" type="password" required autocomplete="current-password">
+        <button class="btn btn-primary" style="margin-top:16px;width:100%">ورود</button>
+      </form>
+      <p class="muted" style="margin-top:16px">حساب پیش‌فرض مدیر: admin / admin123<br>کارشناس: employee / employee123</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}تنظیمات{% endblock %}
+{% block heading %}تنظیمات، ورود اکسل و پشتیبان{% endblock %}
+{% block content %}
+<div class="grid" style="grid-template-columns: 1fr 1fr">
+  <div class="card">
+    <h3>ورود فایل اکسل تاریخی</h3>
+    <p class="muted">قراردادها و کوتاژهای فایل اکسل به صورت رکوردهای جدا ذخیره می‌شوند. موارد مبهم برای بررسی دستی علامت می‌خورند.</p>
+    <form method="post" action="{{ url_for('api_import') }}" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>شرکت</label>
+      <select name="company_id">{% for c in all_companies %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
+      <label>فایل اکسل</label>
+      <input type="file" name="file" accept=".xlsx" required>
+      <button class="btn btn-primary" style="margin-top:12px">ورود اطلاعات</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>پشتیبان پایگاه داده</h3>
+    <form method="post" action="{{ url_for('api_backup') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn btn-gold">ایجاد نسخه پشتیبان</button>
+    </form>
+    <ul>
+      {% for b in backups %}
+      <li><a href="{{ url_for('api_download_backup', name=b) }}">{{ b }}</a></li>
+      {% else %}
+      <li class="muted">هنوز پشتیبان ایجاد نشده است.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="card" style="margin-top:14px">
+  <h3>تاریخچه تغییرات</h3>
+  <table>
+    <thead><tr><th>زمان</th><th>عملیات</th><th>نوع</th><th>شناسه</th><th>جزئیات</th></tr></thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.timestamp }}</td>
+        <td>{{ log.action }}</td>
+        <td>{{ log.record_type }}</td>
+        <td>{{ log.record_id or '-' }}</td>
+        <td>{{ log.details }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

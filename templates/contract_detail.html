@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}جزئیات قرارداد{% endblock %}
+{% block heading %}جزئیات قرارداد {{ contract.contract_number }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>{{ contract.contract_number }}</h2>
+    <div class="muted">{{ contract.company.name }} | {{ contract.customer_name }}</div>
+  </div>
+  <div class="actions">
+    <a class="btn btn-ghost" href="{{ url_for('contract_edit_page', contract_id=contract.id) }}">ویرایش قرارداد</a>
+    <a class="btn btn-gold" href="{{ url_for('declaration_new_page', contract_id=contract.id) }}">ثبت کوتاژ جدید</a>
+  </div>
+</div>
+{% if contract.needs_review %}<div class="notice" style="margin-bottom:12px">{{ contract.review_note }}</div>{% endif %}
+<div class="summary-row" id="summary"></div>
+<div class="card" style="margin-top:14px">
+  <h3>کوتاژهای این قرارداد</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>شماره کوتاژ</th><th>تناژ</th><th>برای شخص</th><th>وضعیت</th><th>شماره حواله</th><th>توضیحات</th><th>عملیات</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const contractId = {{ contract.id }};
+function render(item) {
+  document.getElementById('summary').innerHTML = [
+    ['مقدار قرارداد', item.contract_quantity],
+    ['کوتاژ نهایی', item.finalized_tonnage],
+    ['کوتاژ در انتظار', item.pending_tonnage],
+    ['کوتاژ ابطال‌شده', item.cancelled_tonnage],
+    ['مانده تناژ', item.remaining_tonnage]
+  ].map(([k,v]) => `<div class="card"><span class="muted">${k}</span><b>${formatNumber(v)}</b></div>`).join('');
+  document.getElementById('rows').innerHTML = (item.declarations || []).map(d => `
+    <tr>
+      <td>${escapeHtml(d.declaration_number)}</td>
+      <td>${formatNumber(d.tonnage)}</td>
+      <td>${escapeHtml(d.recipient || '-')}</td>
+      <td><span class="badge ${d.status.includes('ابطال') ? 'badge-danger' : (d.status.includes('نهایی') ? 'badge-ok' : 'badge-warn')}">${escapeHtml(d.status)}</span></td>
+      <td>${escapeHtml(d.dispatch_reference_number || '-')}</td>
+      <td>${escapeHtml(d.description || '-')}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-ghost" href="/declarations/${d.id}/edit">ویرایش</a>
+        <button class="btn btn-sm btn-danger" onclick="cancelDecl(${d.id})">ابطال</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="7">کوتاژی ثبت نشده است</td></tr>';
+}
+async function load() {
+  const data = await api('/api/contracts/' + contractId);
+  render(data.item);
+}
+async function cancelDecl(id) {
+  if (!confirm('کوتاژ ابطال شود؟ تناژ آن از مانده قرارداد کسر نخواهد شد.')) return;
+  await api('/api/declarations/' + id + '/cancel', {method:'POST'});
+  load();
+}
+load();
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}سامانه کوتاژ و اظهار{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+  <div class="layout">
+    <button class="menu-toggle" type="button" id="menuToggle">منو</button>
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+            <img src="{{ url_for('static', filename='Global Trade Customs Management Icon.PNG') }}"
+                alt="سامانه کوتاژ و اظهار">
+        </div>      
+        <!-- <div class="brand-mark">a</div> -->
+        <!-- <div class="brand-mark">ک</div> -->
+        <div>
+          <h1>سامانه کوتاژ و اظهار</h1>
+          
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><span class="dot"></span>داشبورد</a>
+        <a href="{{ url_for('contract_new_page') }}" class="{{ 'active' if request.endpoint == 'contract_new_page' else '' }}"><span class="dot"></span>ثبت قرارداد جدید</a>
+        <a href="{{ url_for('contracts_page') }}" class="{{ 'active' if request.endpoint == 'contracts_page' else '' }}"><span class="dot"></span>مدیریت قراردادها</a>
+        <a href="{{ url_for('declaration_new_page') }}" class="{{ 'active' if request.endpoint == 'declaration_new_page' else '' }}"><span class="dot"></span>ثبت کوتاژ جدید</a>
+        <a href="{{ url_for('declarations_page') }}" class="{{ 'active' if request.endpoint == 'declarations_page' else '' }}"><span class="dot"></span>مدیریت کوتاژها</a>
+        <a href="{{ url_for('reports_page') }}" class="{{ 'active' if request.endpoint == 'reports_page' else '' }}"><span class="dot"></span>گزارش‌ها</a>
+        {% if current_user and current_user.is_admin %}
+        <a href="{{ url_for('users_page') }}" class="{{ 'active' if request.endpoint == 'users_page' else '' }}"><span class="dot"></span>مدیریت کاربران</a>
+        {% endif %}
+        {% if current_user and current_user.is_admin %}
+        <a href="{{ url_for('settings_page') }}" class="{{ 'active' if request.endpoint == 'settings_page' else '' }}"><span class="dot"></span>تنظیمات</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}"><span class="dot"></span>خروج</a>
+      </nav>
+    </aside>
+    <main class="content">
+      <div class="topbar">
+        <div>
+          <strong>{% block heading %}سامانه مدیریت قرارداد و کوتاژ{% endblock %}</strong>
+          <div class="muted">ثبت اطلاعات، با محاسبه خودکار مانده تناژ</div>
+          <!-- <div class="muted">ثبت اطلاعات به‌جای اکسل، با محاسبه خودکار مانده تناژ</div> -->
+        </div>
+        <div class="user-chip">
+          {% if current_user %}{{ current_user.full_name or current_user.username }} | {{ current_user.role }}{% endif %}
+        </div>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

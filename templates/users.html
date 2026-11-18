@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}مدیریت کاربران{% endblock %}
+{% block heading %}مدیریت کاربران{% endblock %}
+{% block content %}
+<div class="grid" style="grid-template-columns: 1fr 1fr">
+  <div class="card">
+    <h3>کاربران</h3>
+    <table>
+      <thead><tr><th>نام کاربری</th><th>نام</th><th>نقش</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td>{{ u.full_name }}</td>
+          <td>{{ u.role }}</td>
+          <td>{{ 'فعال' if u.is_active else 'غیرفعال' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('api_toggle_user', user_id=u.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="btn btn-sm btn-ghost">تغییر وضعیت</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3>کاربر جدید</h3>
+    <form method="post" action="{{ url_for('api_create_user') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>نام کاربری</label><input name="username" required>
+      <label>نام کامل</label><input name="full_name">
+      <label>رمز عبور</label><input name="password" type="password" required>
+      <label>نقش</label>
+      <select name="role"><option value="employee">کارشناس</option><option value="admin">مدیر</option></select>
+      <button class="btn btn-primary" style="margin-top:12px">ثبت کاربر</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

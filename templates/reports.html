@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}گزارش‌ها{% endblock %}
+{% block heading %}جستجو و گزارش‌ها{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="filters">
+    <div><label>شرکت</label><select id="company_id"><option value="">همه</option>{% for c in all_companies %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+    <div><label>شماره قرارداد / مشتری</label><input id="q"></div>
+    <div><label>محصول</label><input id="product"></div>
+    <div><label>محل تحویل</label><input id="location"></div>
+    <div><label>از تاریخ</label><input id="date_from"></div>
+    <div><label>وضعیت گزارش</label>
+      <select id="status">
+        <option value="">همه قراردادها</option>
+        <option value="active">دارای مانده تناژ</option>
+        <option value="completed">تکمیل‌شده</option>
+        <option value="pending">دارای کوتاژ در انتظار</option>
+        <option value="review">نیاز به بررسی دستی</option>
+      </select>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="apply">نمایش گزارش</button>
+    <button class="btn btn-gold" id="exportBtn">خروجی اکسل</button>
+  </div>
+  <div class="table-wrap" style="margin-top:14px">
+    <table>
+      <thead><tr><th>ردیف</th><th>شرکت</th><th>شماره قرارداد</th><th>تاریخ</th><th>مشتری</th><th>مقدار</th><th>نهایی</th><th>مانده</th><th>کوتاژها</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function params() {
+  const p = new URLSearchParams();
+  ['company_id','q','product','location','date_from','status'].forEach(id => {
+    const v = document.getElementById(id).value; if (v) p.set(id, v);
+  });
+  if (document.getElementById('status').value === 'active') p.set('remaining', 'has');
+  return p;
+}
+async function load() {
+  const data = await api('/api/contracts?' + params().toString());
+  document.getElementById('rows').innerHTML = data.items.map((c,i) => `
+    <tr>
+      <td>${i+1}</td><td>${escapeHtml(c.company_name)}</td><td><a href="/contracts/${c.id}">${escapeHtml(c.contract_number)}</a></td>
+      <td>${escapeHtml(c.contract_date)}</td><td>${escapeHtml(c.customer_name)}</td>
+      <td>${formatNumber(c.contract_quantity)}</td><td>${formatNumber(c.finalized_tonnage)}</td>
+      <td>${formatNumber(c.remaining_tonnage)}</td><td>${escapeHtml(c.declaration_numbers || '-')}</td>
+    </tr>`).join('') || '<tr><td colspan="9">موردی یافت نشد</td></tr>';
+}
+document.getElementById('apply').onclick = load;
+document.getElementById('exportBtn').onclick = () => { location.href = '/api/reports/export?' + params().toString(); };
+load();
+</script>
+{% endblock %}

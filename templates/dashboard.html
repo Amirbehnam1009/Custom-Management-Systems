@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}داشبورد{% endblock %}
+{% block heading %}داشبورد{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:14px">
+  <div class="filters">
+    <div><label>شرکت</label><select id="company_id"><option value="">همه شرکت‌ها</option>{% for c in all_companies %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+    <div><label>مشتری</label><select id="customer"><option value="">همه</option></select></div>
+    <div><label>محصول</label><select id="product"><option value="">همه</option></select></div>
+    <div><label>محل تحویل</label><select id="location"><option value="">همه</option></select></div>
+    <div><label>از تاریخ</label><input id="date_from" placeholder="1404/01/01"></div>
+    <div><label>تا تاریخ</label><input id="date_to" placeholder="1405/12/29"></div>
+  </div>
+  <button class="btn btn-primary" id="apply">اعمال فیلتر</button>
+</div>
+<div class="grid stats" id="stats"></div>
+<div class="card" style="margin-top:14px">
+  <h3>مانده تناژ بر اساس محصول و محل تحویل</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>محصول</th><th>محل تحویل</th><th>تعداد قرارداد</th><th>مقدار قرارداد</th><th>مانده تناژ</th></tr></thead>
+      <tbody id="groups"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadLookups() {
+  const companyId = document.getElementById('company_id').value;
+  const data = await api('/api/lookups' + (companyId ? ('?company_id=' + companyId) : ''));
+  fillSelect(document.getElementById('customer'), data.customers);
+  fillSelect(document.getElementById('product'), data.products);
+  fillSelect(document.getElementById('location'), data.locations);
+}
+async function loadDashboard() {
+  const params = new URLSearchParams();
+  ['company_id','customer','product','location','date_from','date_to'].forEach(id => {
+    const v = document.getElementById(id).value; if (v) params.set(id, v);
+  });
+  const data = await api('/api/dashboard?' + params.toString());
+  const s = data.stats;
+  document.getElementById('stats').innerHTML = [
+    ['تعداد قراردادها', s.contracts],
+    ['تناژ قراردادی', formatNumber(s.contract_quantity)],
+    ['تناژ اظهارشده نهایی', formatNumber(s.declared_tonnage)],
+    ['مانده تناژ', formatNumber(s.remaining_tonnage)],
+    ['قراردادهای فعال', s.active_contracts],
+    ['قراردادهای تکمیل‌شده', s.completed_contracts],
+    ['کوتاژهای ابطال‌شده', s.cancelled_declarations],
+    ['کوتاژهای در انتظار', s.pending_declarations]
+  ].map(([k,v]) => `<div class="card stat"><span>${k}</span><b>${v}</b></div>`).join('');
+  document.getElementById('groups').innerHTML = (data.by_product || []).map(g =>
+    `<tr><td>${escapeHtml(g.product)}</td><td>${escapeHtml(g.location)}</td><td>${g.count}</td><td>${formatNumber(g.quantity)}</td><td>${formatNumber(g.remaining)}</td></tr>`
+  ).join('') || '<tr><td colspan="5">داده‌ای یافت نشد</td></tr>';
+}
+document.getElementById('apply').onclick = loadDashboard;
+document.getElementById('company_id').onchange = loadLookups;
+loadLookups().then(loadDashboard);
+</script>
+{% endblock %}
